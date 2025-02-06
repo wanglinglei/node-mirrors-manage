@@ -1,0 +1,25 @@
+{
+  "name": "mnpmmior",
+  "version": "0.0.2",
+  "description": "npm镜像源切换工具",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "mnpmmior": "src/bin/index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "npm",
+    "node"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "execa": "^9.3.0",
+    "inquirer": "^10.0.3",
+    "node-http-ping": "^0.3.1"
+  }
+}
