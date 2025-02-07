@@ -32,6 +32,10 @@ export const helpData = [
     text: "添加镜像源",
     command: "add",
   },
+  {
+    text: "删除镜像源",
+    command: "del",
+  },
 ];
 
 export function help() {

@@ -48,6 +48,8 @@ export class NpmMirrorManger {
       await this.pingOrigin();
     } else if (command === "add") {
       await this.addMirror();
+    } else if (command === "del") {
+      await this.delMirror();
     }
     process.exit(0);
   }
@@ -91,9 +93,11 @@ export class NpmMirrorManger {
    * @description: 获取当前镜像源地址
    * @return {*}
    */
-  async getOriginUrl() {
+  async getOriginUrl(log = true) {
     const origin = await execa("npm", ["config", "get", "registry"]);
-    console.log(chalk.green("⭐️⭐️⭐️ " + origin.stdout));
+    if (log) {
+      console.log(chalk.green("⭐️⭐️⭐️ " + origin.stdout));
+    }
     return origin.stdout;
   }
 
@@ -102,24 +106,17 @@ export class NpmMirrorManger {
    * @return {*}
    */
   async lsAllOrigin() {
-    const currentOrigin = await this.getOriginUrl();
+    const currentOrigin = await this.getOriginUrl(false);
     // const res = await getOrigin();
     const registries = this.mirrors;
     const keys = Object.keys(registries);
-
-    const message = [];
-
-    const max = Math.max(...keys.map((v) => v.length)) + 3;
-    keys.forEach((k) => {
-      const newK =
-        registries[k].registry == currentOrigin.trim() ? "* " + k : "  " + k;
-      const Arr = new Array(...newK);
-      Arr.length = max;
-      const prefix = Array.from(Arr)
-        .map((v) => (v ? v : "-"))
-        .join("");
-
-      message.push(prefix + "  " + registries[k].registry);
+    const max = Math.max(...keys.map((v) => v.length)) + 7;
+    const message = keys.map((item) => {
+      const isCurrent = registries[item].registry == currentOrigin.trim();
+      const prefix = isCurrent ? "* " : "  ";
+      const prefixName = (prefix + item).padEnd(max, " ");
+      let message = prefixName + registries[item].registry;
+      return isCurrent ? chalk.green(message) : chalk.blue(message);
     });
     console.log(message.join("\n"));
   }
@@ -144,9 +141,12 @@ export class NpmMirrorManger {
    * @return {*}
    */
   async chooseOrigin() {
+    const keys = Object.keys(this.mirrors);
+    const max = Math.max(...keys.map((v) => v.length)) + 5;
     const choices = Object.keys(this.mirrors).map((item) => {
+      const name = item.padEnd(max, " ") + this.mirrors[item].registry;
       return {
-        name: `${item} -->${this.mirrors[item].registry}`,
+        name,
         value: item,
       };
     });
@@ -158,6 +158,7 @@ export class NpmMirrorManger {
         choices,
       },
     ]);
+
     return result;
   }
 
@@ -182,6 +183,10 @@ export class NpmMirrorManger {
     }
   }
 
+  /**
+   * @description: 新增镜像源
+   * @return {*}
+   */
   async addMirror() {
     const result = await inquirer.prompt([
       {
@@ -205,5 +210,17 @@ export class NpmMirrorManger {
     };
     fs.writeFileSync(mirrorUrl, JSON.stringify(this.mirrors, null, 2));
     console.log(chalk.green("😀😀😀 镜像源添加成功"));
+  }
+
+  /**
+   * @description: 删除镜像源
+   * @return {*}
+   */
+  async delMirror() {
+    const result = await this.chooseOrigin();
+    const { origin } = result;
+    delete this.mirrors[origin];
+    fs.writeFileSync(mirrorUrl, JSON.stringify(this.mirrors, null, 2));
+    console.log(chalk.green("😀😀😀 镜像源删除成功"));
   }
 }
